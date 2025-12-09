@@ -7,7 +7,8 @@
   "srcURL": "https://github.com/ljhaydn/fpp-lof-audio-sync.git",
   "bugURL": "https://github.com/ljhaydn/fpp-lof-audio-sync/issues",
   "allowUpdates": 1
-  {
+  "versions": [
+		{
 			"minFPPVersion": "3.3",
 			"maxFPPVersion": "4.99",
 			"branch": "master",
@@ -45,4 +46,3 @@
         }	
 	]
 }
-
