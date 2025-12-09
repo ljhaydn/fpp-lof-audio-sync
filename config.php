@@ -138,10 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get status
+// Get status - check for actual lsyncd process
 $lsyncdRunning = false;
-exec("systemctl is-active lsyncd 2>&1", $output, $return_var);
-if ($return_var === 0) {
+exec("pgrep -f 'lsyncd.*lsyncd-lof.conf.lua' 2>&1", $output, $return_var);
+if ($return_var === 0 && !empty($output)) {
     $lsyncdRunning = true;
 }
 
