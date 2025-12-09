@@ -1,0 +1,10 @@
+{
+  "name": "LOF Audio File Sync",
+  "version": "1.0.0",
+  "description": "Automatically syncs audio files from FPP to WordPress server for LOF Audio Streaming",
+  "author": "Lights on Falcon",
+  "homeURL": "https://lightsonfalcon.com",
+  "srcURL": "https://github.com/ljhaydn/fpp-lof-audio-sync",
+  "bugURL": "https://github.com/ljhaydn/fpp-lof-audio-sync/issues",
+  "allowUpdates": 1
+}
