@@ -68,16 +68,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings['sync_delay'] = (int)($_POST['sync_delay'] ?? 1);
             $settings['source_path'] = $_POST['source_path'] ?? '/home/fpp/media/music';
             
-            file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT));
+            $result = file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT));
             
-            // Restart lsyncd if enabled
-            if ($settings['enabled'] && !empty($settings['destination_host'])) {
-                exec("sudo $pluginDir/start_sync.sh > /dev/null 2>&1 &");
+            if ($result === false) {
+                echo '<div class="alert alert-error">ERROR: Could not write to settings file. Check permissions on: ' . htmlspecialchars($settingsFile) . '</div>';
             } else {
-                exec("sudo systemctl stop lsyncd 2>&1");
+                // Restart lsyncd if enabled
+                if ($settings['enabled'] && !empty($settings['destination_host'])) {
+                    exec("sudo $pluginDir/scripts/start_sync.sh > /dev/null 2>&1 &");
+                } else {
+                    exec("sudo systemctl stop lsyncd 2>&1");
+                }
+                
+                echo '<div class="alert alert-success">Settings saved successfully! (' . $result . ' bytes written)</div>';
             }
-            
-            echo '<div class="alert alert-success">Settings saved and sync restarted!</div>';
         } elseif ($action === 'test_ssh') {
             // Test SSH connection - use current form values, not saved settings
             $host = $_POST['destination_host'] ?? '';
