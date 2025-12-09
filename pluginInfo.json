@@ -1,0 +1,23 @@
+{
+	"repoName": "fpp-lof-audio-sync",
+	"name": "LOF Audio File Sync",
+	"author": "Lights on Falcon (Joe Hayden)",
+	"description": "Automatically syncs audio files from FPP to WordPress server using lsyncd",
+	"homeURL": "https://github.com/ljhaydn/fpp-lof-audio-sync",
+	"srcURL": "https://github.com/ljhaydn/fpp-lof-audio-sync.git",
+	"bugURL": "https://github.com/ljhaydn/fpp-lof-audio-sync/issues",
+	"allowUpdates": 1,
+	"versions": [
+		{
+			"minFPPVersion": "8.0",
+			"maxFPPVersion": "0",
+			"branch": "main",
+			"sha": "",
+			"dependencies": {
+			    "plugins": [],
+			    "packages": ["lsyncd"],
+			    "scripts": []
+			}
+		}
+	]
+}
