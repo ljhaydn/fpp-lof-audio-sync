@@ -1,27 +1,19 @@
-# LOF Audio File Sync - FPP Plugin
+# FPP LOF Audio File Sync Plugin
 
-## Description
-
-Automatically syncs audio files from FPP to WordPress server for real-time audio streaming with Lights on Falcon show.
-
-## Features
-
-- **Automatic sync:** Files sync within 1 second of changes
-- **Efficient:** Only syncs changed files (uses rsync)
-- **Web UI:** Configure everything from FPP web interface
-- **Manual control:** Test connections and trigger manual syncs
-- **Monitoring:** View sync logs directly in FPP
+Automatically syncs audio files from Falcon Player (FPP) to WordPress server for real-time audio streaming.
 
 ## Installation
 
-### Method 1: From FPP Plugin Manager (Recommended)
+### Method 1: Via FPP Plugin Manager (Recommended)
 
 1. Open FPP web interface
-2. Go to: Content Setup → Plugin Manager
-3. Click "Install Plugin"
-4. Select "Install from Git URL"
-5. Enter: `https://github.com/ljhaydn/fpp-lof-audio-sync`
-6. Click "Install"
+2. Go to: **Content Setup → Plugins**
+3. In the search box, paste:
+   ```
+   https://raw.githubusercontent.com/ljhaydn/fpp-lof-audio-sync/main/pluginInfo.json
+   ```
+4. Press Enter
+5. Click **Install** when the plugin appears
 
 ### Method 2: Manual Installation
 
@@ -29,187 +21,116 @@ Automatically syncs audio files from FPP to WordPress server for real-time audio
 # SSH into FPP
 ssh fpp@10.9.7.102
 
-# Clone repository
+# Clone plugin
 cd /opt/fpp/plugins
-git clone https://github.com/ljhaydn/fpp-lof-audio-sync lof-audio-sync
+git clone https://github.com/ljhaydn/fpp-lof-audio-sync.git
 
-# Run installation
-cd lof-audio-sync
-bash install.sh
+# Run setup
+cd fpp-lof-audio-sync
+sudo ./plugin_setup.php
 ```
 
 ## Configuration
 
-### Step 1: Setup SSH Key (One-Time)
+After installation:
 
-**On FPP via SSH:**
-
-```bash
-# Generate SSH key if doesn't exist
-ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
-
-# Copy key to WordPress server
-ssh-copy-id www-data@<WORDPRESS_IP>
-
-# Test connection (should work without password)
-ssh www-data@<WORDPRESS_IP> "echo 'Success'"
-```
-
-### Step 2: Configure Plugin
-
-1. In FPP web interface, go to: Content Setup → Plugins → LOF Audio File Sync
-2. Click plugin name to open configuration
-3. Enter settings:
-   - **WordPress Server IP:** Your WordPress server IP
+1. Go to: **Content Setup → LOF Audio File Sync**
+2. Configure settings:
+   - **WordPress Server IP:** Your WordPress server IP address
    - **Destination Path:** `/var/www/lof-audio`
    - **SSH User:** `www-data`
    - **Sync Delay:** `1` second
-4. Click "Test SSH Connection" button
-   - Should show: "SSH connection successful!"
-5. Enable "Enable automatic sync" checkbox
+3. Set up SSH key (see below)
+4. Click "Test SSH Connection"
+5. Enable "Enable automatic sync"
 6. Click "Save Settings"
 
-### Step 3: Initial Sync
+## SSH Key Setup (One-Time)
 
-1. Click "Sync Now (Manual)" button
-2. Wait for sync to complete
-3. Verify files copied to WordPress server:
-   ```bash
-   ssh www-data@<WORDPRESS_IP> "ls -lh /var/www/lof-audio/"
-   ```
+Required for passwordless sync:
 
-## Usage
+```bash
+# SSH into FPP
+ssh fpp@10.9.7.102
 
-Once configured, audio files automatically sync when:
-- New files added to `/home/fpp/media/music/`
-- Existing files modified
-- Files deleted (also deleted on WordPress server)
+# Generate SSH key (if doesn't exist)
+ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
 
-**Sync happens within 1 second of file changes.**
+# Copy key to WordPress server
+ssh-copy-id www-data@YOUR_WORDPRESS_IP
 
-## Monitoring
+# Test connection (should work without password)
+ssh www-data@YOUR_WORDPRESS_IP "echo 'Success'"
+```
 
-### View Sync Status
+## How It Works
 
-In FPP web interface:
-- Go to: Content Setup → Plugins → LOF Audio File Sync
-- Check "Sync Status" section
-- View "Sync Log" at bottom
+1. **lsyncd** monitors `/home/fpp/media/music/` for changes
+2. When files change, waits configured delay (1 second)
+3. Uses **rsync** over SSH to sync to WordPress server
+4. Runs in background automatically
+5. Logs to `/var/log/lsyncd/lsyncd.log`
 
-### Manual Actions
+## Features
 
-- **Test SSH Connection:** Verify SSH key is working
-- **Sync Now:** Trigger immediate sync (useful for testing)
+- **Automatic sync:** Files sync within 1 second of changes
+- **Efficient:** Only syncs changed files (uses rsync)
+- **Delete handling:** Deleted files on FPP also deleted on WordPress
+- **Web UI:** Configure and monitor from FPP interface
+- **Manual sync:** Trigger manual sync anytime
+- **Connection testing:** Test SSH before enabling auto-sync
 
 ## Troubleshooting
 
 ### "SSH connection failed"
 
-**Problem:** SSH key not set up correctly
+**Problem:** SSH key not set up
 
 **Solution:**
 ```bash
-# On FPP:
-ssh-copy-id www-data@<WORDPRESS_IP>
-
-# Test:
-ssh www-data@<WORDPRESS_IP> "echo 'Works'"
+ssh-copy-id www-data@YOUR_WORDPRESS_IP
 ```
 
-### "Sync not running"
+### "Sync service not running"
 
-**Problem:** lsyncd service not started
+**Problem:** lsyncd not installed or not started
 
 **Solution:**
 ```bash
-# On FPP:
-systemctl status lsyncd
-systemctl start lsyncd
-systemctl enable lsyncd
+sudo apt-get install lsyncd
+sudo systemctl start lsyncd
+sudo systemctl enable lsyncd
 ```
 
 ### "Files not syncing"
 
-**Problem:** Configuration error or permission issue
-
-**Solutions:**
-
-1. Check sync log in FPP web interface
-2. Verify destination directory exists:
-   ```bash
-   ssh www-data@<WORDPRESS_IP> "ls -ld /var/www/lof-audio/"
-   ```
-3. Test manual rsync:
-   ```bash
-   rsync -avz /home/fpp/media/music/ www-data@<WORDPRESS_IP>:/var/www/lof-audio/
-   ```
-
-## How It Works
-
-### Technology: lsyncd
-
-The plugin uses `lsyncd` (Live Syncing Daemon):
-- Watches `/home/fpp/media/music/` for file changes
-- Triggers rsync when changes detected
-- Batches multiple changes (1-second delay)
-- Uses SSH for secure transfer
-
-### Sync Flow
-
-```
-1. You add song to FPP
-   ↓
-2. lsyncd detects change (within 1 second)
-   ↓
-3. Waits 1 second (in case more files added)
-   ↓
-4. Runs rsync to WordPress server
-   ↓
-5. Files available for streaming immediately
-```
-
-### Network Impact
-
-- **Bandwidth:** Only changed files transferred
-- **CPU:** Minimal (<1% during sync)
-- **FPP Performance:** No impact on show playback
-
-## Configuration Files
-
-- **Plugin directory:** `/opt/fpp/plugins/lof-audio-sync/`
-- **Configuration:** `/opt/fpp/plugins/lof-audio-sync/config.json`
-- **lsyncd config:** `/etc/lsyncd/lsyncd-lof.conf.lua`
-- **Logs:** `/var/log/lsyncd/lsyncd.log`
-
-## Uninstallation
-
+**Check logs:**
 ```bash
-# Stop syncing
-systemctl stop lsyncd
-systemctl disable lsyncd
-
-# Remove plugin
-rm -rf /opt/fpp/plugins/lof-audio-sync
-
-# Remove lsyncd (if not used by anything else)
-apt-get remove lsyncd
+tail -f /var/log/lsyncd/lsyncd.log
 ```
+
+**Verify destination directory:**
+```bash
+ssh www-data@YOUR_WORDPRESS_IP "ls -la /var/www/lof-audio/"
+```
+
+**Test manual rsync:**
+```bash
+rsync -avz /home/fpp/media/music/ www-data@YOUR_WORDPRESS_IP:/var/www/lof-audio/
+```
+
+## Requirements
+
+- FPP v8.0 or later
+- SSH access to WordPress server
+- lsyncd package (auto-installed)
+- rsync package (included in FPP)
 
 ## Support
 
-**Issues:** https://github.com/ljhaydn/fpp-lof-audio-sync/issues  
-**Website:** https://lightsonfalcon.com
+- **Issues:** https://github.com/ljhaydn/fpp-lof-audio-sync/issues
+- **Website:** https://lightsonfalcon.com
 
 ## License
 
 MIT License - Free to use and modify
-
-## Version History
-
-**1.0.0** (2024-12-08)
-- Initial release
-- Automatic file sync via lsyncd
-- Web UI for configuration
-- SSH key setup instructions
-- Manual sync capability
-- Log viewing
