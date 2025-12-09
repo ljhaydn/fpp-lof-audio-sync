@@ -53,9 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             echo '<div class="alert alert-success">Settings saved and sync restarted!</div>';
         } elseif ($action === 'test_ssh') {
-            // Test SSH connection
-            $host = $settings['destination_host'];
-            $user = $settings['ssh_user'];
+            // Test SSH connection - use current form values, not saved settings
+            $host = $_POST['destination_host'] ?? '';
+            $user = $_POST['ssh_user'] ?? '';
+            
+            // Also update settings in memory so form doesn't reset
+            $settings['destination_host'] = $host;
+            $settings['destination_path'] = $_POST['destination_path'] ?? '/var/www/lof-audio';
+            $settings['ssh_user'] = $user;
+            $settings['sync_delay'] = (int)($_POST['sync_delay'] ?? 1);
+            $settings['source_path'] = $_POST['source_path'] ?? '/home/fpp/media/music';
             
             if (!empty($host) && !empty($user)) {
                 $output = [];
@@ -71,11 +78,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo '<div class="alert alert-error">Please configure destination host first.</div>';
             }
         } elseif ($action === 'sync_now') {
-            // Manual sync
-            $src = $settings['source_path'];
-            $dest = $settings['ssh_user'] . '@' . $settings['destination_host'] . ':' . $settings['destination_path'];
+            // Manual sync - use current form values
+            $src = $_POST['source_path'] ?? $settings['source_path'];
+            $user = $_POST['ssh_user'] ?? $settings['ssh_user'];
+            $host = $_POST['destination_host'] ?? $settings['destination_host'];
+            $dest_path = $_POST['destination_path'] ?? $settings['destination_path'];
             
-            if (!empty($settings['destination_host'])) {
+            // Update settings in memory so form doesn't reset
+            $settings['destination_host'] = $host;
+            $settings['destination_path'] = $dest_path;
+            $settings['ssh_user'] = $user;
+            $settings['sync_delay'] = (int)($_POST['sync_delay'] ?? 1);
+            $settings['source_path'] = $src;
+            
+            $dest = "$user@$host:$dest_path";
+            
+            if (!empty($host)) {
                 $output = [];
                 exec("rsync -avz --delete $src/ $dest/ 2>&1", $output, $return_var);
                 
