@@ -17,7 +17,33 @@
         .btn-secondary { background: #6c757d; color: white; }
         .btn-warning { background: #ffc107; color: black; }
         pre { background: #f0f0f0; padding: 10px; border-radius: 3px; overflow-x: auto; max-height: 300px; }
+        .alert { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     </style>
+    <script>
+        // Sync form values to hidden inputs before submitting test/sync forms
+        function syncFormValues() {
+            var mainForm = document.getElementById('settings_form');
+            var hiddenForms = document.querySelectorAll('form[data-sync-values]');
+            
+            hiddenForms.forEach(function(hiddenForm) {
+                hiddenForm.querySelector('[name="destination_host"]').value = mainForm.destination_host.value;
+                hiddenForm.querySelector('[name="destination_path"]').value = mainForm.destination_path.value;
+                hiddenForm.querySelector('[name="ssh_user"]').value = mainForm.ssh_user.value;
+                hiddenForm.querySelector('[name="sync_delay"]').value = mainForm.sync_delay.value;
+                hiddenForm.querySelector('[name="source_path"]').value = mainForm.source_path.value;
+            });
+        }
+        
+        window.onload = function() {
+            document.querySelectorAll('form[data-sync-values]').forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    syncFormValues();
+                });
+            });
+        };
+    </script>
 </head>
 <body>
 
@@ -137,7 +163,7 @@ if (is_dir($settings['source_path'])) {
 <!-- Settings Form -->
 <div class="config-section">
     <h3>Settings</h3>
-    <form method="post">
+    <form id="settings_form" method="post">
         <input type="hidden" name="action" value="save_settings">
         
         <div class="form-group">
@@ -189,13 +215,23 @@ if (is_dir($settings['source_path'])) {
 <!-- Manual Actions -->
 <div class="config-section">
     <h3>Manual Actions</h3>
-    <form method="post" style="display:inline;">
+    <form method="post" style="display:inline;" data-sync-values="true">
         <input type="hidden" name="action" value="test_ssh">
+        <input type="hidden" name="destination_host" value="<?php echo htmlspecialchars($settings['destination_host']); ?>">
+        <input type="hidden" name="destination_path" value="<?php echo htmlspecialchars($settings['destination_path']); ?>">
+        <input type="hidden" name="ssh_user" value="<?php echo htmlspecialchars($settings['ssh_user']); ?>">
+        <input type="hidden" name="sync_delay" value="<?php echo $settings['sync_delay']; ?>">
+        <input type="hidden" name="source_path" value="<?php echo htmlspecialchars($settings['source_path']); ?>">
         <button type="submit" class="btn btn-secondary">Test SSH Connection</button>
     </form>
     
-    <form method="post" style="display:inline;">
+    <form method="post" style="display:inline;" data-sync-values="true">
         <input type="hidden" name="action" value="sync_now">
+        <input type="hidden" name="destination_host" value="<?php echo htmlspecialchars($settings['destination_host']); ?>">
+        <input type="hidden" name="destination_path" value="<?php echo htmlspecialchars($settings['destination_path']); ?>">
+        <input type="hidden" name="ssh_user" value="<?php echo htmlspecialchars($settings['ssh_user']); ?>">
+        <input type="hidden" name="sync_delay" value="<?php echo $settings['sync_delay']; ?>">
+        <input type="hidden" name="source_path" value="<?php echo htmlspecialchars($settings['source_path']); ?>">
         <button type="submit" class="btn btn-warning">Sync Now (Manual)</button>
     </form>
 </div>
